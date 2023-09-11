@@ -2,9 +2,14 @@ import mysql.connector
 import collections
 import re
 
+def DatabaseConnection():
+    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
+    cursor = connection.cursor()
+    
+    return connection, cursor
 
 def CheckQuestionExists ():
-    return None
+    pass
 
 def CheckMonth(line):
     
@@ -41,9 +46,10 @@ def CheckMonth(line):
 
 def SplitQuestion8 ():
     rawData = collections.namedtuple('rawData', ['raw_data_id', 'file_id', 'question_id', 'answer'])
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
     
+    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
+    #cursor = connection.cursor()
+    connection, cursor = DatabaseConnection()
     
     
     
@@ -76,9 +82,9 @@ def SplitQuestion8 ():
     return splitData
 
 def Insert_govt_changes_by_year_Data (data):
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
-
+    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
+    #cursor = connection.cursor()
+    connection, cursor = DatabaseConnection()
     maxIdsql = '''SELECT MAX(id) FROM  govt_changes_by_year'''
     cursor.execute(maxIdsql)
     previousMaxId = cursor.fetchone()
@@ -105,9 +111,10 @@ def Insert_govt_changes_by_year_Data (data):
     return None
 
 def SplitQuestion11 ():
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
-    
+    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
+    #cursor = connection.cursor()
+    connection, cursor = DatabaseConnection()
+    ##Selecting all rows for "negotiations suggested" question from the raw data input
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
                     FROM raw_data rd 
                     JOIN questions q ON rd.question = q.question_text
@@ -139,4 +146,4 @@ def SplitQuestion11 ():
     return(splitData)
     
 #SplitQuestion8 ()
-print(SplitQuestion11())
+#print(SplitQuestion11())
