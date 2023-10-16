@@ -1,6 +1,7 @@
 import mysql.connector
 import collections
 import re
+from logger import getLogger
 
 def DatabaseConnection():
     connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
@@ -11,9 +12,17 @@ def DatabaseConnection():
 def CheckQuestionExists ():
     pass
 
+def LineStarsWithAYear (line):
+    logger = getLogger()
+    if isinstance(line, str): #check that the correct type of variable, String, has been passed in.
+    #check if the beginning of the string provided are a year from 1941 to 2016
+        return (re.match(r'.*([19][40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line.lstrip()[0:4]) is not None)
+    else:
+        logger.warning("LineStartsWithAYear takes a string but was passed a {type} instead!".format(type = type(line)))
+        return False
 def CheckMonth(line):
     
-    lineToCheck = line.lower()
+    lineToCheck = line.lower() #set line to include only lowercase letters
     
     if 'jan' in lineToCheck or 'january' in lineToCheck:
         return 1
@@ -40,19 +49,18 @@ def CheckMonth(line):
     if 'dec' in lineToCheck or 'december' in lineToCheck:
         return 12
     else:
-        return None
+        #when no month is given we are setting that to December so that the whole year is included.
+        return 12 
                 
     
 
-def SplitQuestion8 ():
-    rawData = collections.namedtuple('rawData', ['raw_data_id', 'file_id', 'question_id', 'answer'])
-    
+def SplitQuestionChangesToGovernment ():    
     #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
     #cursor = connection.cursor()
     connection, cursor = DatabaseConnection()
     
     
-    
+    rawData = []
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
                     FROM raw_data rd 
                     JOIN questions q ON rd.question = q.question_text
@@ -60,17 +68,15 @@ def SplitQuestion8 ():
 
     cursor.execute(sql)
     rawData = cursor.fetchall()
-    #pull data from select statement into rawData namedtuple
-    for row in cursor:
-        rawData.append(row[0],row[1],row[2],row[3])
-        
+    #pull data from select statement into rawData
+
     splitData =  []
     year = ''
     for rawDataRow in rawData:
         splitanswer = rawDataRow[3].splitlines()
         for line in splitanswer:
             #find years between 1940 and 2016. the range of the current data sets
-            if re.match(r'.*([19][40-99]{2})', line[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line[0:4]) is not None:
+            if LineStarsWithAYear(line):
                 year = line
             if year != line:
                 splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, line ))
@@ -78,7 +84,7 @@ def SplitQuestion8 ():
 
     cursor.close()
     connection.close()
-    Insert_govt_changes_by_year_Data(splitData)
+    #Insert_govt_changes_by_year_Data(splitData)
     return splitData
 
 def Insert_govt_changes_by_year_Data (data):
@@ -110,7 +116,8 @@ def Insert_govt_changes_by_year_Data (data):
     connection.close()
     return None
 
-def SplitQuestion11 ():
+def SplitQuestionNegotiationsSuggested():
+    #logger = getLogger()
     #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
     #cursor = connection.cursor()
     connection, cursor = DatabaseConnection()
@@ -123,27 +130,27 @@ def SplitQuestion11 ():
     rawData = cursor.fetchall()
 
     splitData =  []
+    #splitData will contain id of raw data line, file id, question id, year, month and each lines text
     year = ''
     month = ''
+    #cycle through the lines in the rawDAta and label each row with the correct year and month.
+    #each set of data starts with a line that is between 1941 and 2016
     for rawDataRow in rawData:
-        splitanswer = rawDataRow[3].splitlines() 
+        splitanswer = rawDataRow[3].splitlines() #split the raw data into a list of individual lines
         for line in splitanswer:
-            #find years between 1940 and 2016. the range of the current data sets
-            if re.match(r'.*([19][40-99]{2})', line[0:4]) is not None:
-                year = line.lstrip()[0:4]
+            if LineStarsWithAYear(line): #this function returns true if the line starts with a year between 1941 and 2016
+                year = line.lstrip()[0:4] #set year equal to the year in the line. remove and whitespace before the year
                 month = CheckMonth(line)
-                # split data contains id of raw data line, file id, question id, year month and each lines text
-
-            elif re.match(r'.*([20][00-16]{2})', line[0:4]) is not None:
-                year = line.lstrip()[0:4]
-                month = CheckMonth(line)
-            splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, line ))        
+            if (line.isspace() is False): #remove lines with no data in them (whitespace)
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year month and each lines text with begining whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, line.lstrip()))    
 
     
     
     cursor.close()
     connection.close()
-    return(splitData)
+    return splitData
     
-#SplitQuestion8 ()
-#print(SplitQuestion11())
+#print(SplitQuestionChangesToGovernment())
+#print(LineStarsWithAYear(3))
+#print(SplitQuestionNegotiationsSuggested())
