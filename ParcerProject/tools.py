@@ -1,4 +1,5 @@
 import logging
+import mysql.connector
 
 def getLogger(    
         LOG_FORMAT     = '%(asctime)s %(levelname)-8s %(message)s',
@@ -34,3 +35,9 @@ def getLogger(
     log.setLevel(logging.DEBUG)
 
     return log
+
+def DatabaseConnection():
+    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
+    cursor = connection.cursor()
+    
+    return connection, cursor

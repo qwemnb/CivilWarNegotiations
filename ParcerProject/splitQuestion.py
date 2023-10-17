@@ -1,25 +1,23 @@
-import mysql.connector
+
 import collections
 import re
-from logger import getLogger
+import tools
+import InsertSplitQuestion
 
-def DatabaseConnection():
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
-    
-    return connection, cursor
+
 
 def CheckQuestionExists ():
     pass
 
 def LineStarsWithAYear (line):
-    logger = getLogger()
+    logger = tools.getLogger()
     if isinstance(line, str): #check that the correct type of variable, String, has been passed in.
     #check if the beginning of the string provided are a year from 1941 to 2016
         return (re.match(r'.*([19][40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line.lstrip()[0:4]) is not None)
     else:
         logger.warning("LineStartsWithAYear takes a string but was passed a {type} instead!".format(type = type(line)))
         return False
+    
 def CheckMonth(line):
     
     lineToCheck = line.lower() #set line to include only lowercase letters
@@ -57,7 +55,7 @@ def CheckMonth(line):
 def SplitQuestionChangesToGovernment ():    
     #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
     #cursor = connection.cursor()
-    connection, cursor = DatabaseConnection()
+    connection, cursor = tools.DatabaseConnection()
     
     
     rawData = []
@@ -79,7 +77,7 @@ def SplitQuestionChangesToGovernment ():
             if LineStarsWithAYear(line):
                 year = line
             if year != line:
-                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, line ))
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, line.lstrip() ))
       
 
     cursor.close()
@@ -87,40 +85,13 @@ def SplitQuestionChangesToGovernment ():
     #Insert_govt_changes_by_year_Data(splitData)
     return splitData
 
-def Insert_govt_changes_by_year_Data (data):
-    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    #cursor = connection.cursor()
-    connection, cursor = DatabaseConnection()
-    maxIdsql = '''SELECT MAX(id) FROM  govt_changes_by_year'''
-    cursor.execute(maxIdsql)
-    previousMaxId = cursor.fetchone()
-    previousMaxIdInt = 0
-    if previousMaxId[0] is None:
-        previousMaxIdInt = 0
-    else:
-        previousMaxIdInt = previousMaxId[0]
-    sql = '''INSERT INTO govt_changes_by_year (raw_data_id, file_id, question_id, answer_year, year_data)
-              VALUES (%s,%s,%s,%s,%s)'''
-    
-    cursor.executemany(sql, data)
-    
-    connection.commit()
-    cursor.execute(maxIdsql)
-    maxId =  cursor.fetchone()
-    maxIdInt = maxId[0]
-    
-    print('{rowCount} rows inserted of {dataLength}'.format(rowCount = maxIdInt - previousMaxIdInt, dataLength = len(data)) )
-    
 
-    cursor.close()
-    connection.close()
-    return None
 
 def SplitQuestionNegotiationsSuggested():
-    #logger = getLogger()
+    #tools = getLogger()
     #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
     #cursor = connection.cursor()
-    connection, cursor = DatabaseConnection()
+    connection, cursor = tools.DatabaseConnection()
     ##Selecting all rows for "negotiations suggested" question from the raw data input
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
                     FROM raw_data rd 
@@ -142,7 +113,7 @@ def SplitQuestionNegotiationsSuggested():
                 year = line.lstrip()[0:4] #set year equal to the year in the line. remove and whitespace before the year
                 month = CheckMonth(line)
             if (line.isspace() is False): #remove lines with no data in them (whitespace)
-                #splitData contains id of raw data line [0], file id [1] , question id [2], year month and each lines text with begining whitespace removed
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month and each lines text with begining whitespace removed
                 splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, line.lstrip()))    
 
     
@@ -150,7 +121,10 @@ def SplitQuestionNegotiationsSuggested():
     cursor.close()
     connection.close()
     return splitData
-    
+
+
+
 #print(SplitQuestionChangesToGovernment())
 #print(LineStarsWithAYear(3))
-#print(SplitQuestionNegotiationsSuggested())
+#InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
+InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())

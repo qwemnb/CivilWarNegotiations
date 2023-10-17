@@ -3,7 +3,7 @@ import csv
 import os
 import glob
 import hashlib
-from logger import getLogger
+from tools import getLogger
 
 
 #pull list of csv files in the given directory
