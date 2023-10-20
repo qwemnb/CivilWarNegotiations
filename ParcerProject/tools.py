@@ -1,13 +1,16 @@
 import logging
 import mysql.connector
 
+
+
+
 def getLogger(    
         LOG_FORMAT     = '%(asctime)s %(levelname)-8s %(message)s',
-        LOG_NAME       = '',
+        LOG_NAME       = 'Primary',
         LOG_FILE_INFO  = r'C:\Users\Julie\Desktop\HeatherData\logs\file.log',
         LOG_FILE_ERROR = r'C:\Users\Julie\Desktop\HeatherData\logs\error.log',
         LOG_FILE_DEBUG = r'C:\Users\Julie\Desktop\HeatherData\logs\debug.log'):
-
+    
     log           = logging.getLogger(LOG_NAME)
     log_formatter = logging.Formatter(LOG_FORMAT)
 
@@ -41,3 +44,10 @@ def DatabaseConnection():
     cursor = connection.cursor()
     
     return connection, cursor
+
+def CloseLogger(logger):
+        logger.Close()
+        return None
+    
+    
+logger = getLogger()

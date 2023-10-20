@@ -59,7 +59,7 @@ def ImportFile(fileToBeImported):
             connection.commit()
             logger.error("Successfully removed FileId:{fileidtoremove} FileName:{filenametoremove}".format(fileidtoremove = fileIdToRemove, filenametoremove = fileNameToRemove))
         else: #if the fileid in the database does not match the given fileid
-            logger.error("There was an issue removing FileId:{fileidtoremove} FileName:{filenametoremove]".format(fileidtoremove = fileIdToRemove, filenametoremove = filename))
+            logger.error("There was an issue, removing FileId:{fileidtoremove} FileName:{filenametoremove]".format(fileidtoremove = fileIdToRemove, filenametoremove = filename))
         return None
         
         
@@ -163,8 +163,7 @@ def ImportFile(fileToBeImported):
     cursor.close()
     connection.close()
     return None
-ImportFile('Myanmar_CPB_1948-1988.csv')
+#ImportFile('Myanmar_CPB_1948-1988.csv')
 #ImportFile('BadQuestion.csv')
 #print(GetFileList('C:\\Users\\Julie\\Desktop\\HeatherData\\documents\\'))
-
 #CreateQuestionList()

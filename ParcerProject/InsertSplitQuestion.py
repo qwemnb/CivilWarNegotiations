@@ -1,13 +1,14 @@
 import tools
 import mysql.connector
+from tools import logger
+
 
 def GetMaxIdOfTable(tableName,connection,cursor):
-    logger = tools.getLogger()
     maxIdsql = '''SELECT MAX(id) FROM  {table}'''. format(table = tableName)
     try:
         cursor.execute(maxIdsql)
         maxId = cursor.fetchone()
-        if maxId[0] is None:
+        if maxId[0] is None: #if there are no rows in the table
            return 0
         else:
             return maxId[0]
@@ -15,17 +16,25 @@ def GetMaxIdOfTable(tableName,connection,cursor):
         logger.error("Get Max Id {error}".format(error = e))
         return -1
     
-def DataInsertCorrectly(tableName, idChange, dataLength, logger):
+def DataInsertedCorrectly(tableName, idChange, dataLength):
     if idChange == dataLength:
         logger.debug('{rowcount} rows inserted into {tablename} of {datalength} rows of data'.format(rowcount = idChange,tablename = tableName, datalength = dataLength))
         return True
-    else:    
+    else:
         logger.error('{rowcount} rows inserted into {tablename} of {datalength} rows of data. Data is being removed!'.format(rowcount = idChange,tablename = tableName, datalength = dataLength))   
         return False
     
 
+def DataInsertedCorrectlyTest(tableName, idChange, dataLength):
+    if idChange == dataLength:
+        print('{rowcount} rows inserted into {tablename} of {datalength} rows of data'.format(rowcount = idChange,tablename = tableName, datalength = dataLength))
+        return True
+    else:    
+        print('{rowcount} rows inserted into {tablename} of {datalength} rows of data. Data is being removed!'.format(rowcount = idChange,tablename = tableName, datalength = dataLength))   
+        return False
+
+
 def InsertChangesToGovernment (data):
-    logger = tools.getLogger()
     tableToInsertInto = 'govt_changes_by_year'
     connection, cursor = tools.DatabaseConnection()
     #get largest rowid in table
@@ -44,7 +53,7 @@ def InsertChangesToGovernment (data):
     #the difference between the previous max id and new max id should equal the rows in the data
     newMaxId = GetMaxIdOfTable(tableToInsertInto, connection,cursor)
     
-    if DataInsertCorrectly(tableToInsertInto, newMaxId-previousMaxId, len(data), logger):
+    if DataInsertedCorrectly(tableToInsertInto, newMaxId-previousMaxId, len(data)):
         connection.commit()
     else:
         connection.rollback()
@@ -54,7 +63,6 @@ def InsertChangesToGovernment (data):
     return None
 
 def InsertNegotiationsSuggested (data):
-    logger = tools.getLogger()
     tableToInsertInto = 'negotiations_suggested'
     connection, cursor = tools.DatabaseConnection()
     #get largest row in table
@@ -70,7 +78,7 @@ def InsertNegotiationsSuggested (data):
     newMaxId = GetMaxIdOfTable(tableToInsertInto, connection,cursor)
     
     #this returns true if the rows inserted match the number of rows in the data given to the function
-    if DataInsertCorrectly(tableToInsertInto, newMaxId-previousMaxId, len(data), logger):
+    if DataInsertedCorrectly(tableToInsertInto, newMaxId-previousMaxId, len(data)):
         connection.commit()
     #if the row counts do not match remove the inserted rows.
     else:

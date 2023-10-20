@@ -1,16 +1,12 @@
-
-import collections
 import re
 import tools
 import InsertSplitQuestion
-
-
+from tools import logger
 
 def CheckQuestionExists ():
     pass
 
 def LineStarsWithAYear (line):
-    logger = tools.getLogger()
     if isinstance(line, str): #check that the correct type of variable, String, has been passed in.
     #check if the beginning of the string provided are a year from 1941 to 2016
         return (re.match(r'.*([19][40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line.lstrip()[0:4]) is not None)
@@ -50,25 +46,30 @@ def CheckMonth(line):
         #when no month is given we are setting that to December so that the whole year is included.
         return 12 
                 
-    
-
-def SplitQuestionChangesToGovernment ():    
-    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    #cursor = connection.cursor()
+#this takes a partial test question and returns the raw_date tables data for the matching question.              
+def GetRawDataForQuestion (questionText):
     connection, cursor = tools.DatabaseConnection()
-    
-    
-    rawData = []
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
                     FROM raw_data rd 
                     JOIN questions q ON rd.question = q.question_text
-                    WHERE q.question_text LIKE "Were there any changes in government during the conflict%"'''
-
+                    WHERE q.question_text LIKE "{question}%"'''.format(question = questionText)   
+    
     cursor.execute(sql)
-    rawData = cursor.fetchall()
-    #pull data from select statement into rawData
+    rawQuestionData = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return rawQuestionData
+             
+    
+#question 8
+def SplitQuestionChangesToGovernment ():    
+
+    rawData = GetRawDataForQuestion("Were there any changes in government during the conflict")
 
     splitData =  []
+    #splitData will contain raw data line, file id, question id, year, each line of text for the year
     year = ''
     for rawDataRow in rawData:
         splitanswer = rawDataRow[3].splitlines()
@@ -76,30 +77,26 @@ def SplitQuestionChangesToGovernment ():
             #find years between 1940 and 2016. the range of the current data sets
             if LineStarsWithAYear(line):
                 year = line
-            if year != line:
-                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, line.lstrip() ))
-      
+            if year != line: #skip the year header on each block of text
+                #add each line to splitData 
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, line.lstrip()))
 
-    cursor.close()
-    connection.close()
-    #Insert_govt_changes_by_year_Data(splitData)
     return splitData
 
+#question 9
+def SplitQuestionCeasefireDeclared():
+    pass
 
+#question 10
+def SplitQuestionOfferInducements():
+    pass
 
+#question 11
 def SplitQuestionNegotiationsSuggested():
-    #tools = getLogger()
-    #connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    #cursor = connection.cursor()
-    connection, cursor = tools.DatabaseConnection()
-    ##Selecting all rows for "negotiations suggested" question from the raw data input
-    sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
-                    FROM raw_data rd 
-                    JOIN questions q ON rd.question = q.question_text
-                    WHERE q.question_text LIKE "Were negotiations suggested?%"'''
-    cursor.execute(sql)
-    rawData = cursor.fetchall()
-
+    
+    
+    rawData = GetRawDataForQuestion("Were negotiations suggested?")
+    
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
     year = ''
@@ -116,15 +113,72 @@ def SplitQuestionNegotiationsSuggested():
                 #splitData contains id of raw data line [0], file id [1] , question id [2], year, month and each lines text with begining whitespace removed
                 splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, line.lstrip()))    
 
-    
-    
-    cursor.close()
-    connection.close()
     return splitData
 
+#question 12
+def SplitQuestionOneOrBothRefuseNegotiate ():
+    pass
+
+#question 13
+def SplitQuestionContentOfNegotiations ():
+    pass
+
+#question 14
+def SplitQuestionEndWithoutSigning ():
+    pass
+
+#question 15
+def SplitQuestionWasAgreementSigned ():
+    pass
+
+#question 16
+def SplitQuestionAgreementEndFighting ():
+    pass
+
+#question 17
+def SplitQuestionReachedNotSigned ():
+    pass
+
+#question 18
+def SplitQuestionUnsignedEndFighting ():
+    pass
+
+#question 19
+def SplitQuestionOutsideOfferMediation ():
+    pass
+
+#question 20
+def SplitQuestionDidMediationOccur ():
+    pass
+
+#question 21
+def SplitQuestionWasUNInvolved ():
+    pass
+
+#question 22
+def SplitQuestionWereIGOInvolved ():
+    pass
+
+#question 23
+def SplitQuestionThirdPartyIntervene ():
+    pass
+
+#question 24
+def SplitQuestionDidGovernmentRecieveAid ():
+    pass
+
+#question 25
+def SplitQuestionDidRebelsRecieveAid ():
+    pass
+
+#question 26
+def SplitQuestionDidConflictRecur ():
+    pass
 
 
-#print(SplitQuestionChangesToGovernment())
+
+print(SplitQuestionChangesToGovernment())
+print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
 #InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
-InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())
+#InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())
