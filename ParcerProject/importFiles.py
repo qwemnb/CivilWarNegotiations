@@ -3,8 +3,7 @@ import csv
 import os
 import glob
 import hashlib
-from tools import getLogger
-
+from tools import logger
 
 #pull list of csv files in the given directory
 def GetFileList(directory):
@@ -15,31 +14,16 @@ def GetFileList(directory):
     csvList = glob.glob('*.{}'.format(extension))
     return csvList
 
-#create the questions key table with hashes of each question.
-def CreateQuestionList():
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
-    
-    #get list of questions from raw data input
-    sqlQuestionList = '''SELECT DISTINCT question from raw_data'''
-    cursor.execute(sqlQuestionList)
-    questions = cursor.fetchall()
-    #hash each question and store that with the question text into the questions table
-    for question in questions:
-        questionHash = hashlib.sha256(question[0].encode('utf-8'))
-        #ignore questions that have already been added to the list
-        sqlInsertQuestion = '''INSERT IGNORE INTO questions (question_text,question_hash) values(%s,%s)'''
-        cursor.execute(sqlInsertQuestion, (question[0],questionHash.hexdigest()))
-    connection.commit()
-    cursor.close()
-    connection.close()
+def ImportFileList(fileNames):
+    for fileName in fileNames:
+        logger.debug("************STARTING IMPORT OF {filename}************".format(filename = fileName))
+        ImportFile(fileName)
     return None
 
-
+def GetQuestionID(questionText):
     
 
 def ImportFile(fileToBeImported):
-    logger = getLogger()
     def RemoveFileFromFilesTable(fileIdToRemove,fileNameToRemove):
         #check that the id given is for the correct filename
         sqlCheckFile = '''SELECT id FROM files WHERE file_name = "{filenametoremove}"'''.format(filenametoremove = fileNameToRemove)
@@ -112,7 +96,8 @@ def ImportFile(fileToBeImported):
             for line in rawDataReader:
                 #create a list of each question/ answer pair with the corresponding file id.
                 #hash question to verify each question is the correct value
-                questionHash = hashlib.sha256(line[0].encode('utf-8'))
+                formatedQuestionText = ''.join(i for i in line[0] if i.isalnum())
+                questionHash = hashlib.sha256(formatedQuestionText.encode('utf-8'))
                 
                 sqlHashCheck = '''SELECT COUNT(*) FROM questions WHERE question_hash = "{hash}"'''.format(hash = questionHash.hexdigest())
                 logger.debug("Executing: {sql}".format(sql = sqlHashCheck))
@@ -163,7 +148,7 @@ def ImportFile(fileToBeImported):
     cursor.close()
     connection.close()
     return None
-#ImportFile('Myanmar_CPB_1948-1988.csv')
+
+#ImportFile('Myanmar_MujahidParty_1948-1961.csv')
 #ImportFile('BadQuestion.csv')
-#print(GetFileList('C:\\Users\\Julie\\Desktop\\HeatherData\\documents\\'))
-#CreateQuestionList()
+ImportFileList((GetFileList('C:\\Users\\Julie\\Desktop\\HeatherData\\documents\\')))
