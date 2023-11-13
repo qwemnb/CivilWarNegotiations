@@ -2,6 +2,7 @@ import re
 import tools
 import InsertSplitQuestion
 from tools import logger
+from QuestionDictionary import questionDictionary
 
 def CheckQuestionExists ():
     pass
@@ -54,6 +55,7 @@ def GetRawDataForQuestion (questionText):
                     JOIN questions q ON rd.question = q.question_text
                     WHERE q.question_text LIKE "{question}%"'''.format(question = questionText)   
     
+    logger.debug("Executing SQL: {sqlstatement}".format(sqlstatement = sql))
     cursor.execute(sql)
     rawQuestionData = cursor.fetchall()
     
@@ -61,12 +63,19 @@ def GetRawDataForQuestion (questionText):
     connection.close()
     
     return rawQuestionData
-             
+
+
+
+
+
+def SplitRebelGroupsFightingByYear():
+    pass
+            
     
-#question 8
+
 def SplitQuestionChangesToGovernment ():    
 
-    rawData = GetRawDataForQuestion("Were there any changes in government during the conflict")
+    rawData = GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged")
 
     splitData =  []
     #splitData will contain raw data line, file id, question id, year, each line of text for the year
@@ -83,19 +92,19 @@ def SplitQuestionChangesToGovernment ():
 
     return splitData
 
-#question 9
+
 def SplitQuestionCeasefireDeclared():
     pass
 
-#question 10
+
 def SplitQuestionOfferInducements():
     pass
 
-#question 11
+
 def SplitQuestionNegotiationsSuggested():
     
     
-    rawData = GetRawDataForQuestion("Were negotiations suggested?")
+    rawData = GetRawDataForQuestion("Werenegotiationssuggested")
     
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
@@ -115,70 +124,73 @@ def SplitQuestionNegotiationsSuggested():
 
     return splitData
 
-#question 12
+
 def SplitQuestionOneOrBothRefuseNegotiate ():
     pass
 
-#question 13
+
 def SplitQuestionContentOfNegotiations ():
     pass
 
-#question 14
+
 def SplitQuestionEndWithoutSigning ():
     pass
 
-#question 15
+
 def SplitQuestionWasAgreementSigned ():
     pass
 
-#question 16
+
 def SplitQuestionAgreementEndFighting ():
     pass
 
-#question 17
+
 def SplitQuestionReachedNotSigned ():
     pass
 
-#question 18
+
 def SplitQuestionUnsignedEndFighting ():
     pass
 
-#question 19
+
 def SplitQuestionOutsideOfferMediation ():
     pass
 
-#question 20
+
 def SplitQuestionDidMediationOccur ():
     pass
 
-#question 21
+
 def SplitQuestionWasUNInvolved ():
     pass
 
-#question 22
+
 def SplitQuestionWereIGOInvolved ():
     pass
 
-#question 23
+
 def SplitQuestionThirdPartyIntervene ():
     pass
 
-#question 24
+
 def SplitQuestionDidGovernmentRecieveAid ():
     pass
 
-#question 25
+
 def SplitQuestionDidRebelsRecieveAid ():
     pass
 
-#question 26
+
 def SplitQuestionDidConflictRecur ():
     pass
 
 
+#print(questionDictionary)
 
-print(SplitQuestionChangesToGovernment())
-print(SplitQuestionNegotiationsSuggested())
+print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
+
+#print(SplitQuestionChangesToGovernment())
+#print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
 #InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
 #InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())

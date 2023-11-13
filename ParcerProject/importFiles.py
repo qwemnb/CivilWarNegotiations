@@ -3,6 +3,7 @@ import csv
 import os
 import glob
 import hashlib
+import tools
 from tools import logger
 
 #pull list of csv files in the given directory
@@ -14,13 +15,32 @@ def GetFileList(directory):
     csvList = glob.glob('*.{}'.format(extension))
     return csvList
 
+#Run ImportFile for each filename in the given list
 def ImportFileList(fileNames):
+    #iterate through list of filenames
     for fileName in fileNames:
-        logger.debug("************STARTING IMPORT OF {filename}************".format(filename = fileName))
+        logger.info('''\n\n************STARTING IMPORT OF {filename}************\n\n'''.format(filename = fileName))
         ImportFile(fileName)
     return None
 
 def GetQuestionID(questionText):
+    connection, cursor = tools.DatabaseConnection()
+    sqlSelectQuestionId = '''SELECT id FROM questions where question_text = "{questiontext}"'''.format(questiontext = questionText)
+    cursor.execute(sqlSelectQuestionId)
+    questionId = cursor.fetchone()
+    if questionId is None:
+        logger.error("Duplicate Question in Question Table:\n{questiontext}").format(questiontext = questionText)
+        cursor.close()
+        connection.close()
+        return None
+    else:
+        cursor.close()
+        connection.close()
+        return questionId[0]
+   
+   
+    
+        
     
 
 def ImportFile(fileToBeImported):
@@ -33,7 +53,7 @@ def ImportFile(fileToBeImported):
         
         databaseFileId = cursor.fetchone()[0]
         
-        logger.info("Database File Id: {dbfileid} compared to File Id given in function {fileidtoberemoved}".format(dbfileid = databaseFileId, fileidtoberemoved = fileIdToRemove))
+        logger.debug("Database File Id: {dbfileid} compared to File Id given in function {fileidtoberemoved}".format(dbfileid = databaseFileId, fileidtoberemoved = fileIdToRemove))
         if (databaseFileId == fileIdToRemove): # if the filename returns the correct file id
             sqlRemoveFileImported = ('''DELETE FROM files WHERE id = {fileidtoremove}'''.format(fileidtoremove = fileIdToRemove))
             cursor.execute(sqlRemoveFileImported)
@@ -48,14 +68,14 @@ def ImportFile(fileToBeImported):
         
         
       
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
+    
+    connection, cursor = tools.DatabaseConnection()
 
     
     
     filename = fileToBeImported
     
-    logger.debug("Starting to process file: {csvfilename}".format(csvfilename = filename))
+    #logger.info("Starting to process file: {csvfilename}".format(csvfilename = filename))
     
     #Check that the file has not already been imported
     sqlCheckFile = '''SELECT COUNT(*) FROM files WHERE file_name = "{csvfilename}"'''.format(csvfilename = filename)
@@ -97,6 +117,7 @@ def ImportFile(fileToBeImported):
                 #create a list of each question/ answer pair with the corresponding file id.
                 #hash question to verify each question is the correct value
                 formatedQuestionText = ''.join(i for i in line[0] if i.isalnum())
+                questionId = GetQuestionID(formatedQuestionText)
                 questionHash = hashlib.sha256(formatedQuestionText.encode('utf-8'))
                 
                 sqlHashCheck = '''SELECT COUNT(*) FROM questions WHERE question_hash = "{hash}"'''.format(hash = questionHash.hexdigest())
@@ -107,7 +128,7 @@ def ImportFile(fileToBeImported):
                 logger.debug("Question Hash Count: {count}".format(count = questionHashCount))
                 
                 if questionHashCount == 1: #question exists once in questions table
-                    values.append((fileId,line[0],line[1]))
+                    values.append((fileId,questionId,line[1]))
                     dataFileRowCount += 1
                 else:
                     questionErrors += 1
@@ -118,14 +139,14 @@ def ImportFile(fileToBeImported):
                         logger.error("ERROR IN QUESTIONS TABLE!!! DUPICATE DATA")
             if questionErrors > 0:
                 RemoveFileFromFilesTable(fileId,filename)
-                logger.error("Finished Processing {csvfilename} in ERROR".format(csvfilename = filename))
+                logger.error("\n\n************Finished Processing {csvfilename} in ERROR************\n\n".format(csvfilename = filename))
                 cursor.close()
                 connection.close()
                 return None
 
 
-
-            sqlInsertRawData = '''INSERT INTO raw_data (file_id,question,answer) VALUES (%s,%s,%s)'''
+            
+            sqlInsertRawData = '''INSERT INTO raw_data (file_id,question_id,answer) VALUES (%s,%s,%s)'''
             cursor.executemany(sqlInsertRawData, values)
             logger.debug("Inserting into raw data for file {csvfilename}".format(csvfilename = filename))
         connection.commit()
@@ -138,13 +159,13 @@ def ImportFile(fileToBeImported):
         #if the row counts match log the info
         if (dataFileRowCount == insertedRowCount):
             logger.info("{rowcount} rows inserted into raw_data from fileId {csvfileid} ({csvfilename})".format(rowcount = insertedRowCount, csvfileid = fileId, csvfilename = filename))
-            logger.debug("Finished Processing {csvfilename} with SUCCESS".format(csvfilename = filename))
+            logger.info("\n\n************Finished Processing {csvfilename} with SUCCESS************".format(csvfilename = filename))
         #if the row counts do not match log error message
         else:
             logger.error("File contains {csvrowcount} lines. {insertedrowcount} in raw_data table for fileId {csvfileid} ({csvfilename}) ".format(csvrowcount = dataFileRowCount, insertedrowcount = insertedRowCount, csvfileid = fileId, csvfilename = filename))
     else:
         logger.warning("File {csvfilename} Already Imported".format(csvfilename = filename))
-        logger.debug("Finished Processing {csvfilename} Already Imported".format(csvfilename = filename))
+        logger.info('''\n\n************Finished Processing {csvfilename} Already Imported************'''.format(csvfilename = filename))
     cursor.close()
     connection.close()
     return None

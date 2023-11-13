@@ -1,7 +1,9 @@
 import csv
 import hashlib
 import mysql.connector
-from tools import getLogger
+import tools
+from tools import logger
+
 
 
 def AddQuestion(questionText):
@@ -37,8 +39,7 @@ def ReadQuestions(filename):
     return values
 
 def InsertQuestions(values):
-    connection = mysql.connector.connect(user='root', password ='root', host='localhost', database='heather')
-    cursor = connection.cursor()
+    connection, cursor = tools.DatabaseConnection()
     
     sqlInsertQuestion = '''INSERT IGNORE INTO questions (question_text,question_hash,question_display_text) values(%s,%s,%s)'''
     cursor.executemany(sqlInsertQuestion, values)
