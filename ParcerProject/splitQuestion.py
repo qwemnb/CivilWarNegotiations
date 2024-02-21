@@ -51,8 +51,8 @@ def CheckMonth(line):
 def GetRawDataForQuestion (questionText):
     connection, cursor = tools.DatabaseConnection()
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
-                    FROM raw_data rd 
-                    JOIN questions q ON rd.question = q.question_text
+                    FROM raw_data rd
+                    JOIN questions q ON rd.question_id = q.id
                     WHERE q.question_text LIKE "{question}%"'''.format(question = questionText)   
     
     logger.debug("Executing SQL: {sqlstatement}".format(sqlstatement = sql))
@@ -69,9 +69,24 @@ def GetRawDataForQuestion (questionText):
 
 
 def SplitRebelGroupsFightingByYear():
-    pass
-            
+    rawData = GetRawDataForQuestion("Numbersandnamesofotherrebelgroupsfightingbyyear")
+    #splitData will contain raw data line, file id, question id, the aim, the number and list of rebel groups
+    splitData =  []
     
+    aims = ''
+    
+    for rawDataRow in rawData:
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            #skip lines with no data in them (whitespace)
+            if (line.isspace() is False):
+                if "other" in line.lower():
+                    aims = line
+                else:
+                    splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], aims, line.lstrip(" ·")))
+    return splitData                 
+
+
 
 def SplitQuestionChangesToGovernment ():    
 
@@ -187,8 +202,8 @@ def SplitQuestionDidConflictRecur ():
 
 #print(questionDictionary)
 
-print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
-
+#print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
+print (SplitRebelGroupsFightingByYear())
 #print(SplitQuestionChangesToGovernment())
 #print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
