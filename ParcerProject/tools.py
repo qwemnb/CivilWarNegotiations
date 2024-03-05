@@ -48,6 +48,7 @@ def DatabaseConnection():
 def CloseLogger(logger):
         logger.Close()
         return None
+
     
     
 logger = getLogger()
