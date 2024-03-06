@@ -18,13 +18,31 @@ def GetFileName (fileId):
     return fileName[0]
 
 def LineStarsWithAYear (line):
-    if isinstance(line, str): #check that the correct type of variable, String, has been passed in.
+    #check that the correct type of variable, String, has been passed in.
+    if isinstance(line, str): 
     #check if the beginning of the string provided are a year from 1941 to 2016
         return (re.match(r'.*([19][40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line.lstrip()[0:4]) is not None)
     else:
         logger.warning("LineStartsWithAYear takes a string but was passed a {type} instead!".format(type = type(line)))
         return False
     
+    
+#When a line has a year range this splits it into beginning and end years. and returns a tuple of (begin, end) years
+def SplitYearRange(yearString):
+    #check that the correct type of variable, String, has been passed in.
+    if isinstance(yearString, str):
+        if yearString.lstrip().split("-", 1)[1] is not None:
+            startYearRange = yearString.lstrip().split("-", 1)[0]
+            if LineStarsWithAYear(yearString.lstrip().split("-", 1)[1]):
+                endYearRange = yearString.lstrip().split("-", 1)[1]
+            else:
+                endYearRange = startYearRange
+        return startYearRange, endYearRange
+    
+    else:
+        logger.warning("SplitYearRange takes a string but was passed a {type} instead!".format(type = type(yearString)))
+        return "",""
+        
 def CheckMonth(line):
     
     lineToCheck = line.lower() #set line to include only lowercase letters
@@ -257,39 +275,275 @@ def SplitQuestionEndWithoutSigning ():
                     #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, who did not sign (government/rebels/both) and each lines text with beginning whitespace removed
                 splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, whoDidNotSign, line.lstrip()))
     return splitData                     
-            
-    
-    
-    
-    
 
     
 def SplitQuestionWasAgreementSigned ():
-    pass
+    
+
+    rawData = GetRawDataForQuestion("WasanagreementsignedIfsowhatwasthecontentofthesignedagreement")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            agreementSigned = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                agreementSigned = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                agreementSigned = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                agreementSigned = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, agreementSigned, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, agreementSigned, line.lstrip()))
+    return splitData 
 
 
 def SplitQuestionAgreementEndFighting ():
-    pass
+    rawData = GetRawDataForQuestion("DidthesignedagreementendthefightingIfnotwhoresumedcontinuedfighting")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            endFighting = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                endFighting = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                endFighting = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                endFighting = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, endFighting, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, endFighting, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionReachedNotSigned ():
-    pass
-
+    
+    rawData = GetRawDataForQuestion("WasanagreementreachedbutnotsignedieaverbalagreementIfsowhatwasthecontentoftheverbalagreement")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            agreementNotSigned = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                agreementNotSigned = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                agreementNotSigned = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                agreementNotSigned = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, agreementNotSigned, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, agreementNotSigned, line.lstrip()))
+    return splitData
 
 def SplitQuestionUnsignedEndFighting ():
-    pass
+    rawData = GetRawDataForQuestion("DidtheunsignedieverbalagreementendthefightingIfnotwhoresumedcontinuedfighting")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            notSignedEndFighting = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                notSignedEndFighting = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                notSignedEndFighting = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                notSignedEndFighting = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, notSignedEndFighting, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, notSignedEndFighting, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionOutsideOfferMediation ():
-    pass
+    rawData = GetRawDataForQuestion("Didsomeoneoutsidetheconflictoffertomediatebetweenthebelligerents")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            mediationOffer = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                mediationOffer = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                mediationOffer = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                mediationOffer = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, mediationOffer, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, mediationOffer, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionDidMediationOccur ():
-    pass
+    rawData = GetRawDataForQuestion("Didmediationbyanoutsideactoractuallyoccur")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        #stores month number default is always 12
+        month = 12
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            didMediatinOccur = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                year = line.lstrip().split(" ", 1)[0]#set year equal to the year in the line, including trailing letters which distinguish negotiations in same year.
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                month = CheckMonth(line)
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                didMediatinOccur = "No"
+            elif "yes" in lineWithYearMonthRemoved:
+                didMediatinOccur = "Yes"
+            elif "n/a" in lineWithYearMonthRemoved:
+                didMediatinOccur = "N/A"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, month, didMediatinOccur, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, month, didMediatinOccur, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionWasUNInvolved ():
-    pass
+    rawData = GetRawDataForQuestion("WastheUNinvolvedintheconflictdonotincludemediation")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ''
+        beginYear = ""
+        endYear = ""
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+            wasUNInvolved = ""
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                #set year equal to the year data in the line, including trailing letters which distinguish negotiations in same year.
+                year = line.lstrip().split(" ", 1)[0]
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                if "-" in year:
+                    #this answer can contain year ranges.
+                    beginYear, endYear = SplitYearRange(year)
+                else:
+                    beginYear = year
+                    endYear = year
+                
+            #Lines with year are separated by a : after the year and month information.
+            if ":" in line:
+                #set to lower case, remove leading spaces, split at the : and take the remaining data
+                lineWithYearMonthRemoved = line.lower().lstrip().split(":", 1)[1]
+            else:
+                lineWithYearMonthRemoved = line.lower()
+                
+            if "no" in lineWithYearMonthRemoved:
+                wasUNInvolved = "No"
+            elif "n/a" in lineWithYearMonthRemoved:
+                wasUNInvolved = "N/A"
+            #if the line contains information then the answer is Yes as "No" and "N/A" are already accounted for.
+            elif lineWithYearMonthRemoved != "":
+                wasUNInvolved = "Yes"
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, wasUNInvolved, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], beginYear, endYear, wasUNInvolved, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionWereIGOInvolved ():
@@ -314,7 +568,7 @@ def SplitQuestionDidConflictRecur ():
 
 #print ('1980: No, continued into 1981'.lstrip().split(":", 1)[1].lstrip().split(" ", 1)[0].lower())
 
-print (SplitQuestionEndWithoutSigning())
+print (SplitQuestionWasUNInvolved())
 #print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
 #print (SplitQuestionOfferInducements())
 
