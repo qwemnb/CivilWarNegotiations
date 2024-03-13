@@ -4,6 +4,7 @@ import InsertSplitQuestion
 from tools import logger
 from QuestionDictionary import questionDictionary
 
+
 def CheckQuestionExists ():
     pass
 
@@ -21,7 +22,7 @@ def LineStarsWithAYear (line):
     #check that the correct type of variable, String, has been passed in.
     if isinstance(line, str): 
     #check if the beginning of the string provided are a year from 1941 to 2016
-        return (re.match(r'.*([19][40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'.*([20][00-16]{2})', line.lstrip()[0:4]) is not None)
+        return (re.match(r'([19]{2}[40-99]{2})', line.lstrip()[0:4]) is not None or re.match(r'([20]{2}[0]{1}[0-9]{1})', line.lstrip()[0:4]) is not None  or re.match(r'([20]{2}1[0-6]{1})', line.lstrip()[0:4]) is not None)
     else:
         logger.warning("LineStartsWithAYear takes a string but was passed a {type} instead!".format(type = type(line)))
         return False
@@ -42,6 +43,52 @@ def SplitYearRange(yearString):
     else:
         logger.warning("SplitYearRange takes a string but was passed a {type} instead!".format(type = type(yearString)))
         return "",""
+
+
+def SplitYearRangeInsideString(yearString):
+    
+
+    beginYear = ""
+    endYear = ""
+    re1 = None
+    re2 = None
+    re3 = None
+    re4 = None
+    re5 = None
+    re6 = None
+    
+    if isinstance(yearString, str):
+        re1 = re.search(r'[19]{2}[40-99]{2}-[19]{2}[40-99]{2}',yearString)
+        if re1 is not None:   
+            beginYear, endYear = SplitYearRange(re1.group(0))
+        else:
+            re2 = re.search(r'[19]{2}[40-99]{2}-[20]{2}0[0-9]{1}',yearString)
+            if re2 is not None:
+                beginYear, endYear = SplitYearRange(re2.group(0))
+            else:
+                re3 = re.search(r'[19]{2}[40-99]{2}-[20]{2}1[0-6]{1}',yearString)
+                if re3 is not None:
+                    beginYear, endYear = SplitYearRange(re3.group(0))
+                else:
+                    re4 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}0[0-9]{1}',yearString)
+                    if re4 is not None:
+                        beginYear, endYear = SplitYearRange(re4.group(0))
+                    else:
+                        re5 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}1[0-6]{1}',yearString)
+                        if re5 is not None:
+                            beginYear, endYear = SplitYearRange(re5.group(0))
+                        else:
+                            re6 = re.search(r'[20]{2}1[0-6]{1}-[20]{2}1[0-6]{1}',yearString)
+                            if re6 is not None:
+                                beginYear, endYear = SplitYearRange(re6.group(0))
+    else:
+        logger.warning("SplitYearRange takes a string but was passed a {type} instead!".format(type = type(yearString)))
+        return "",""
+    
+    return beginYear, endYear
+ 
+
+
         
 def CheckMonth(line):
     
@@ -120,7 +167,7 @@ def SplitQuestionChangesToGovernment ():
 
     splitData =  []
     #splitData will contain raw data line, file id, question id, year, each line of text for the year
-    year = ''
+    year = ""
     for rawDataRow in rawData:
         splitanswer = rawDataRow[3].splitlines()
         for line in splitanswer:
@@ -143,7 +190,7 @@ def SplitQuestionOfferInducements():
     
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
-    year = ''
+    year = ""
     month = ''
     #cycle through the lines in the rawDAta and label each row with the correct year and month.
     #each set of data starts with a line that is between 1941 and 2016
@@ -168,7 +215,7 @@ def SplitQuestionNegotiationsSuggested():
     
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
-    year = ''
+    year = ""
     month = ''
     #cycle through the lines in the rawDAta and label each row with the correct year and month.
     #each set of data starts with a line that is between 1941 and 2016
@@ -188,7 +235,7 @@ def SplitQuestionNegotiationsSuggested():
 def SplitQuestionOneOrBothRefuseNegotiate ():
     rawData = GetRawDataForQuestion("ForeachnegotiationsuggesteddidoneorbothbelligerentsrefusetonegotiateWhorefusedtonegotiate")
     splitData = []
-    year = ''
+    year = ""
     #stores month number default is always 12
     month = 12
     #contains Yes or No 
@@ -215,7 +262,7 @@ def SplitQuestionContentOfNegotiations ():
     
     rawData = GetRawDataForQuestion("Ifbothpartiesagreedtonegotiateandnegotiationoccurredwhatwasthecontentofnegotiations")
     splitData = []
-    year = ''
+    year = ""
     #stores month number default is always 12
     month = 12
     
@@ -235,7 +282,7 @@ def SplitQuestionEndWithoutSigning ():
     
     rawData = GetRawDataForQuestion("Ifbothpartiesagreedtonegotiateandnegotiationoccurreddideitherorbothbelligerentsendthenegotiationswithoutsigninganagreement")
     splitData = []
-    year = ''
+    year = ""
     #stores month number default is always 12
     month = 12
     potentialError = "" #holds error message until a new year is found, if there is no whoDidNotSign information error is thrown
@@ -284,7 +331,7 @@ def SplitQuestionWasAgreementSigned ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -321,7 +368,7 @@ def SplitQuestionAgreementEndFighting ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -359,7 +406,7 @@ def SplitQuestionReachedNotSigned ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -395,7 +442,7 @@ def SplitQuestionUnsignedEndFighting ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -432,7 +479,7 @@ def SplitQuestionOutsideOfferMediation ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -469,7 +516,7 @@ def SplitQuestionDidMediationOccur ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         #stores month number default is always 12
         month = 12
         splitanswer = rawDataRow[3].splitlines()
@@ -506,7 +553,7 @@ def SplitQuestionWasUNInvolved ():
     splitData = []
     
     for rawDataRow in rawData:
-        year = ''
+        year = ""
         beginYear = ""
         endYear = ""
         splitanswer = rawDataRow[3].splitlines()
@@ -547,16 +594,104 @@ def SplitQuestionWasUNInvolved ():
 
 
 def SplitQuestionWereIGOInvolved ():
-    pass
+    rawData = GetRawDataForQuestion("WereregionalIGOsinvolvedintheconflictdonotincludemediation")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ""
+        beginYear = ""
+        endYear = ""
+        wasIGOInvolved = ""
+        splitanswer = rawDataRow[3].splitlines()
+        for line in splitanswer:
+
+            if LineStarsWithAYear(line): 
+                #line = line.lstrip() # remove beginning whitespace
+                #set year equal to the year data in the line, including trailing letters which distinguish negotiations in same year.
+                year = line.lstrip().split(" ", 1)[0]
+                if ":" in year:
+                    # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                    year = year.replace(":", "")
+                if "-" in year:
+                    #this answer can contain year ranges.
+                    beginYear, endYear = SplitYearRange(year)
+                else:
+                    beginYear = year
+                    endYear = year
+                                 
+                if "n/a" in line.lower():
+                    wasIGOInvolved = "N/A"
+                #if the line contains information then the answer is Yes
+                else:
+                    wasIGOInvolved = "Yes"
+            elif line.lower() == "no":
+                wasIGOInvolved = "No"
+                
+            if (line.isspace() is False):
+                #splitData contains id of raw data line [0], file id [1] , question id [2], year, wasIGOInvolved, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], beginYear, endYear, wasIGOInvolved, line.lstrip()))
+                
+    return splitData
 
 
 def SplitQuestionThirdPartyIntervene ():
-    pass
+    rawData = GetRawDataForQuestion("DidathirdpartystateinterveneintheconflictIfsohowmanyandonwhosebehalfbyyear")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        year = ""
+        group = "" #this can be Government or Rebels
+        beginYear = ""
+        endYear = ""
+        splitanswer = rawDataRow[3].splitlines()
+        interventionType = ""
+        didThirdPartyIntervene = ""
+
+        for line in splitanswer:
+            #if the line starts with government or reberls then reset year and intervention type
+            if line.lower().lstrip().startswith("government"):
+                group = "Government"
+                year = ""
+                interventionType = ""
+            elif line.lower().lstrip().startswith("rebel"):
+                group = "Rebels"
+                year = ""
+                interventionType = ""
+            #if the line does not start with Government or Rebel check for a year
+            else:
+                if LineStarsWithAYear(line):
+                    interventionType = ""
+                #line = line.lstrip() # remove beginning whitespace
+                    #set year equal to the year data in the line, including trailing letters which distinguish negotiations in same year.
+                    year = line.lstrip().split(" ", 1)[0]
+                    if ":" in year:
+                        # "year:" is used of no month is given. This removes the : if it is included before the first space.
+                        year = year.replace(":", "")
+                    
+                    if "-" in year:
+                    #this answer can contain year ranges.
+                        beginYear, endYear = SplitYearRange(year)
+                    else:
+                        beginYear = year
+                        endYear = year
+                    #if the year line contains n/a then no party intervened in that year orr year range. 
+                    if "n/a" in line.lower():
+                        didThirdPartyIntervene = "N/A"
+                        interventionType = "N/A"
+                        splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2],group, didThirdPartyIntervene, beginYear, endYear, interventionType, line.lstrip()))
+                #The type of intervention starts with a "-" on rows under a year and is labeled with the type of intervention.
+                elif line.lower().lstrip().startswith("-"):
+                    interventionType = line.lstrip().split("-", 1)[1]
+                #if the data does not start with a year or an intervention type then it is data for that group/year/intervention type combination.
+                else:
+                    if (line.isspace() is False):
+                        #splitData contains id of raw data line [0], file id [1] , question id [2], year, wasIGOInvolved, and each lines text with beginning whitespace removed
+                        splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2],group, didThirdPartyIntervene, beginYear, endYear, interventionType, line.lstrip()))
+    return splitData
 
 
 def SplitQuestionDidGovernmentRecieveAid ():
     pass
-
 
 def SplitQuestionDidRebelsRecieveAid ():
     pass
@@ -566,11 +701,11 @@ def SplitQuestionDidConflictRecur ():
     pass
 
 
-#print ('1980: No, continued into 1981'.lstrip().split(":", 1)[1].lstrip().split(" ", 1)[0].lower())
 
-print (SplitQuestionWasUNInvolved())
+
 #print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
-#print (SplitQuestionOfferInducements())
+#print (SplitQuestionDidGovernmentRecieveAid())
+print(SplitYearRangeInsideString("test, 1945-2009"))
 
 #print(SplitQuestionChangesToGovernment())
 #print(SplitQuestionNegotiationsSuggested())
