@@ -5,6 +5,7 @@ from tools import logger
 from QuestionDictionary import questionDictionary
 
 
+
 def CheckQuestionExists ():
     pass
 
@@ -27,66 +28,84 @@ def LineStarsWithAYear (line):
         logger.warning("LineStartsWithAYear takes a string but was passed a {type} instead!".format(type = type(line)))
         return False
     
+#returns the start and end indexes of the year in the given line.
+def FindYearInsideString (line):
+    
+    if isinstance(line, str):
+        #date ranges are written as ####-####
+        if "-" in line:
+            #return the date ranges index.
+            return FindYearRangeInsideString(line)
+        else:     
+            if LineStarsWithAYear(line):
+                return 0, 4
+            re1 = re.search(r'([19]{2}[40-99]{2})', line)
+            if re1 is not None:
+                return re1.span(0)
+            
+            re2 = re.search(r'([20]{2}[0]{1}[0-9]{1})', line)
+            if re2 is not None:
+                return re2.span(0)
+            
+            re3 = re.search(r'([20]{2}1[0-6]{1})', line)
+            if re3 is not None:
+                return re3.span(0)
+            
+            return None, None        
+    else:
+        logger.warning("FindYearInsideString takes a string but was passed a {type} instead!".format(type = type(line)))
+        return None, None        
+    
     
 #When a line has a year range this splits it into beginning and end years. and returns a tuple of (begin, end) years
 def SplitYearRange(yearString):
+    endYearRange = startYearRange = None
     #check that the correct type of variable, String, has been passed in.
     if isinstance(yearString, str):
-        if yearString.lstrip().split("-", 1)[1] is not None:
-            startYearRange = yearString.lstrip().split("-", 1)[0]
-            if LineStarsWithAYear(yearString.lstrip().split("-", 1)[1]):
-                endYearRange = yearString.lstrip().split("-", 1)[1]
-            else:
-                endYearRange = startYearRange
+        i1, i2 = FindYearRangeInsideString(yearString)
+        if i1 is not None and i2 is not None:
+            startYearRange = yearString[i1:i1+4]
+            endYearRange = yearString[i2-4:i2]
+                
         return startYearRange, endYearRange
+        
+            
     
     else:
         logger.warning("SplitYearRange takes a string but was passed a {type} instead!".format(type = type(yearString)))
-        return "",""
+        return None,None
 
-
-def SplitYearRangeInsideString(yearString):
-    
-
-    beginYear = ""
-    endYear = ""
-    re1 = None
-    re2 = None
-    re3 = None
-    re4 = None
-    re5 = None
-    re6 = None
+#return the index of the beginning and end of a date range in the given string
+def FindYearRangeInsideString(yearString):
+ 
+    re1 = re2 = re3 = re4 = re5 = re6 = None
     
     if isinstance(yearString, str):
         re1 = re.search(r'[19]{2}[40-99]{2}-[19]{2}[40-99]{2}',yearString)
         if re1 is not None:   
-            beginYear, endYear = SplitYearRange(re1.group(0))
+            return re1.span(0)
+        re2 = re.search(r'[19]{2}[40-99]{2}-[20]{2}0[0-9]{1}',yearString)
+        if re2 is not None:
+            return re2.span(0)
+        re3 = re.search(r'[19]{2}[40-99]{2}-[20]{2}1[0-6]{1}',yearString)
+        if re3 is not None:
+            return re3.span(0)
+        re4 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}0[0-9]{1}',yearString)
+        if re4 is not None:
+            return re4.span(0)
+        re5 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}1[0-6]{1}',yearString)
+        if re5 is not None:
+            return re5.span(0)
+        re6 = re.search(r'[20]{2}1[0-6]{1}-[20]{2}1[0-6]{1}',yearString)
+        if re6 is not None:
+            return re6.span(0)
         else:
-            re2 = re.search(r'[19]{2}[40-99]{2}-[20]{2}0[0-9]{1}',yearString)
-            if re2 is not None:
-                beginYear, endYear = SplitYearRange(re2.group(0))
-            else:
-                re3 = re.search(r'[19]{2}[40-99]{2}-[20]{2}1[0-6]{1}',yearString)
-                if re3 is not None:
-                    beginYear, endYear = SplitYearRange(re3.group(0))
-                else:
-                    re4 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}0[0-9]{1}',yearString)
-                    if re4 is not None:
-                        beginYear, endYear = SplitYearRange(re4.group(0))
-                    else:
-                        re5 = re.search(r'[20]{2}0[0-9]{1}-[20]{2}1[0-6]{1}',yearString)
-                        if re5 is not None:
-                            beginYear, endYear = SplitYearRange(re5.group(0))
-                        else:
-                            re6 = re.search(r'[20]{2}1[0-6]{1}-[20]{2}1[0-6]{1}',yearString)
-                            if re6 is not None:
-                                beginYear, endYear = SplitYearRange(re6.group(0))
-    else:
-        logger.warning("SplitYearRange takes a string but was passed a {type} instead!".format(type = type(yearString)))
-        return "",""
+            return None,None
     
-    return beginYear, endYear
- 
+    else:
+        logger.warning("FindYearRangeInsideString takes a string but was passed a {type} instead!".format(type = type(yearString)))
+        return None,None
+    
 
 
         
@@ -122,7 +141,7 @@ def CheckMonth(line):
         #when no month is given we are setting that to December so that the whole year is included.
         return 12 
                 
-#this takes a partial test question and returns the raw_date tables data for the matching question.              
+#this takes a partial question and returns the raw_date table's data for the matching question.              
 def GetRawDataForQuestion (questionText):
     connection, cursor = tools.DatabaseConnection()
     sql = '''SELECT rd.id, rd.file_id, q.id, rd.answer 
@@ -482,7 +501,9 @@ def SplitQuestionOutsideOfferMediation ():
         year = ""
         #stores month number default is always 12
         month = 12
+        
         splitanswer = rawDataRow[3].splitlines()
+        
         for line in splitanswer:
             mediationOffer = ""
             if LineStarsWithAYear(line): 
@@ -556,7 +577,9 @@ def SplitQuestionWasUNInvolved ():
         year = ""
         beginYear = ""
         endYear = ""
+        
         splitanswer = rawDataRow[3].splitlines()
+        
         for line in splitanswer:
             wasUNInvolved = ""
             if LineStarsWithAYear(line): 
@@ -602,7 +625,9 @@ def SplitQuestionWereIGOInvolved ():
         beginYear = ""
         endYear = ""
         wasIGOInvolved = ""
+        
         splitanswer = rawDataRow[3].splitlines()
+        
         for line in splitanswer:
 
             if LineStarsWithAYear(line): 
@@ -643,10 +668,11 @@ def SplitQuestionThirdPartyIntervene ():
         group = "" #this can be Government or Rebels
         beginYear = ""
         endYear = ""
-        splitanswer = rawDataRow[3].splitlines()
         interventionType = ""
         didThirdPartyIntervene = ""
-
+        
+        splitanswer = rawDataRow[3].splitlines()
+        
         for line in splitanswer:
             #if the line starts with government or reberls then reset year and intervention type
             if line.lower().lstrip().startswith("government"):
@@ -691,7 +717,83 @@ def SplitQuestionThirdPartyIntervene ():
 
 
 def SplitQuestionDidGovernmentRecieveAid ():
-    pass
+    rawData = GetRawDataForQuestion("Didthegovernmentreceivenonconflictspecificforeigndevelopmentaid")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        wasAidGiven = ""
+        beginYear = ""
+        endYear = ""
+        alphaNumLine = None
+        splitanswer = rawDataRow[3].splitlines()
+        
+        
+        for line in splitanswer:
+            startYearIndex = endYearIndex = None
+            #this holds that part of the line string that would contain a year if one or a range exist.
+            yearString = ""
+            lineToInsert = None
+            
+            
+            
+            #does the line start with Yes            
+            if line.lower().lstrip()[0:4] == "yes," or line.lower().lstrip()[0:4] == "yes ":
+                #This will return None if the line ends after the comma
+                splitLine = line.lower().lstrip().split(", ", 1)[1]
+                logger.debug("splitLineOnCommaLine: {splitline}".format(splitline = splitLine))
+                
+                #this removes all special characters including spaces
+                alphaNumLine = ''.join(i for i in splitLine if i.isalnum())
+                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
+                
+                wasAidGiven = "Yes"
+                yearString = splitLine
+            #If it does not start with Yes
+            else:
+                alphaNumLine = ''.join(i for i in line.lower().lstrip() if i.isalnum())
+                yearString = line.lower().lstrip().split(" ", 1)[0]
+            
+            
+            #if the line starts with a 4 digit year between 1941 and 2016   
+            if  alphaNumLine is not None and LineStarsWithAYear(alphaNumLine):
+                wasAidGiven = "Yes"
+                logger.debug("yearString: {yearstring}".format(yearstring = yearString))
+                
+                #if the yearString contains a range
+                if yearString[4] == "-":
+                    beginYear, endYear = SplitYearRange(yearString)
+                    logger.debug(SplitYearRange(yearString))
+                    logger.debug("beginYear: {begin} \n EndYear: {end}".format(begin = beginYear, end = endYear))
+                else:
+                    beginYear = endYear = alphaNumLine[0:4]
+                    logger.debug("beginYear: {begin} \n EndYear: {end}".format(begin = beginYear, end = endYear))
+            
+                          
+            #alphaNumLine is not used here because it does not contain the "/" that we need to look for.
+            if "n/a" in line.lower():
+                wasAidGiven = "N/A"
+            if alphaNumLine[0:2] == "No":
+                wasAidGiven = "No"
+            #if there is more than just the year data in the row we want to include it in the split data.
+            #if the yearString is the samne as the line then we want to exclude it.
+            logger.debug("line: {line}\nyearString: {yearstring}".format(line = line, yearstring = yearString))
+            if len(line) >= len(yearString) and line.isspace() is False:
+                #splitData contains id of raw data line [0], file id [1] , question id [2], begin year range ,end year range, wasAidGiven, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2],beginYear, endYear, wasAidGiven, line.lstrip()))
+    return splitData
+            
+            
+        
+                        
+                        
+                        
+                        
+                
+            
+            
+        
+        
+        
 
 def SplitQuestionDidRebelsRecieveAid ():
     pass
@@ -701,12 +803,24 @@ def SplitQuestionDidConflictRecur ():
     pass
 
 
-
-
+def TEST (splitanswer):    
+    for line in splitanswer:
+        year1 = year2 = None
+        if LineStarsWithAYear(line.lstrip()):
+            if "-" in line:
+                year1, year2 = SplitYearRange(line.lstrip())
+            else:
+                year1 = year2 = line.lstrip()[0:4]               
+        else:
+            i1 , i2 = FindYearRangeInsideString(line)
+            if i1 is not None and i2 is not None:
+                year1, year2 = SplitYearRange(line[i1:i2])
+        print(year1, year2)
+        
+        
 #print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
-#print (SplitQuestionDidGovernmentRecieveAid())
-print(SplitYearRangeInsideString("test, 1945-2009"))
-
+print(SplitQuestionDidGovernmentRecieveAid())
+#print(FindYearInsideString("1235232342015asd"))
 #print(SplitQuestionChangesToGovernment())
 #print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
