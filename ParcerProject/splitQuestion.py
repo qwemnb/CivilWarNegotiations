@@ -165,17 +165,24 @@ def SplitRebelGroupsFightingByYear():
     #splitData will contain raw data line, file id, question id, the aim, the number and list of rebel groups
     splitData =  []
     
-    aims = ''
+
     
     for rawDataRow in rawData:
+        aims = ""
         splitanswer = rawDataRow[3].splitlines()
+        year = ""
+           
         for line in splitanswer:
             #skip lines with no data in them (whitespace)
             if (line.isspace() is False):
-                if "other" in line.lower():
+                splitLine = line.lower().lstrip(" ·")
+
+                if LineStarsWithAYear(splitLine):
+                    year = splitLine[0:4]
+                if "other" in splitLine:
                     aims = line
                 else:
-                    splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], aims, line.lstrip(" ·")))
+                    splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2], year, aims, line.lstrip(" ·")))
     return splitData                 
 
 
@@ -235,7 +242,7 @@ def SplitQuestionNegotiationsSuggested():
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
     year = ""
-    month = ''
+    month = 12
     #cycle through the lines in the rawDAta and label each row with the correct year and month.
     #each set of data starts with a line that is between 1941 and 2016
     for rawDataRow in rawData:
@@ -735,9 +742,13 @@ def SplitQuestionDidGovernmentRecieveAid ():
             lineToInsert = None
             
             
-            
-            #does the line start with Yes            
-            if line.lower().lstrip()[0:4] == "yes," or line.lower().lstrip()[0:4] == "yes ":
+            if len(line.lower().lstrip()) > 0 and line.lower().lstrip()[0] == "-":
+                line = line.split("-",1)[1]
+            #does the line start with Yes
+            if line == "Yes":
+                wasAidGiven = "Yes"
+                
+            elif line.lower().lstrip()[0:4] == "yes," or line.lower().lstrip()[0:4] == "yes ":
                 #This will return None if the line ends after the comma
                 splitLine = line.lower().lstrip().split(", ", 1)[1]
                 logger.debug("splitLineOnCommaLine: {splitline}".format(splitline = splitLine))
@@ -751,6 +762,7 @@ def SplitQuestionDidGovernmentRecieveAid ():
             #If it does not start with Yes
             else:
                 alphaNumLine = ''.join(i for i in line.lower().lstrip() if i.isalnum())
+                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
                 yearString = line.lower().lstrip().split(" ", 1)[0]
             
             
@@ -760,7 +772,7 @@ def SplitQuestionDidGovernmentRecieveAid ():
                 logger.debug("yearString: {yearstring}".format(yearstring = yearString))
                 
                 #if the yearString contains a range
-                if yearString[4] == "-":
+                if len(yearString) > 4 and yearString[4] == "-":
                     beginYear, endYear = SplitYearRange(yearString)
                     logger.debug(SplitYearRange(yearString))
                     logger.debug("beginYear: {begin} \n EndYear: {end}".format(begin = beginYear, end = endYear))
@@ -770,9 +782,11 @@ def SplitQuestionDidGovernmentRecieveAid ():
             
                           
             #alphaNumLine is not used here because it does not contain the "/" that we need to look for.
+            
             if "n/a" in line.lower():
                 wasAidGiven = "N/A"
-            if alphaNumLine[0:2] == "No":
+            
+            if alphaNumLine is not None and ((len(alphaNumLine) > 2 and alphaNumLine[0:2] == "no") or alphaNumLine == "no"):
                 wasAidGiven = "No"
             #if there is more than just the year data in the row we want to include it in the split data.
             #if the yearString is the samne as the line then we want to exclude it.
@@ -782,27 +796,87 @@ def SplitQuestionDidGovernmentRecieveAid ():
                 splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2],beginYear, endYear, wasAidGiven, line.lstrip()))
     return splitData
             
-            
-        
-                        
-                        
-                        
-                        
-                
-            
-            
-        
-        
-        
+
 
 def SplitQuestionDidRebelsRecieveAid ():
-    pass
+    rawData = GetRawDataForQuestion("Didtherebelgroupreceivenonconflictspecificforeigndevelopmentaid")
+    splitData = []
+    
+    for rawDataRow in rawData:
+        wasAidGiven = ""
+        beginYear = ""
+        endYear = ""
+        alphaNumLine = None
+        splitanswer = rawDataRow[3].splitlines()
+        
+        
+        for line in splitanswer:
+            startYearIndex = endYearIndex = None
+            #this holds that part of the line string that would contain a year if one or a range exist.
+            yearString = ""
+            lineToInsert = None
+            
+            if len(line.lower().lstrip()) > 0 and line.lower().lstrip()[0] == "-":
+                line = line.split("-",1)[1]
+            #does the line start with Yes
+            if line == "Yes":
+                wasAidGiven = "Yes"
+                
+            elif line.lower().lstrip()[0:4] == "yes," or line.lower().lstrip()[0:4] == "yes ":
+                #This will return None if the line ends after the comma
+                splitLine = line.lower().lstrip().split(", ", 1)[1]
+                logger.debug("splitLineOnCommaLine: {splitline}".format(splitline = splitLine))
+                
+                #this removes all special characters including spaces
+                alphaNumLine = ''.join(i for i in splitLine if i.isalnum())
+                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
+                
+                wasAidGiven = "Yes"
+                yearString = splitLine
+            #If it does not start with Yes
+            else:
+                alphaNumLine = ''.join(i for i in line.lower().lstrip() if i.isalnum())
+                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
+                yearString = line.lower().lstrip().split(" ", 1)[0]
+            
+            
+            #if the line starts with a 4 digit year between 1941 and 2016   
+            if  alphaNumLine is not None and LineStarsWithAYear(alphaNumLine):
+                wasAidGiven = "Yes"
+                logger.debug("yearString: {yearstring}".format(yearstring = yearString))
+                
+                #if the yearString contains a range
+                if len(yearString) > 4 and yearString[4] == "-":
+                    beginYear, endYear = SplitYearRange(yearString)
+                    logger.debug(SplitYearRange(yearString))
+                    logger.debug("beginYear: {begin} \n EndYear: {end}".format(begin = beginYear, end = endYear))
+                else:
+                    beginYear = endYear = alphaNumLine[0:4]
+                    logger.debug("beginYear: {begin} \n EndYear: {end}".format(begin = beginYear, end = endYear))
+            
+                          
+            #alphaNumLine is not used here because it does not contain the "/" that we need to look for.
+            
+            if "n/a" in line.lower():
+                wasAidGiven = "N/A"
+            
+            if alphaNumLine is not None and ((len(alphaNumLine) > 2 and alphaNumLine[0:2] == "no") or alphaNumLine == "no"):
+                wasAidGiven = "No"
+            #if there is more than just the year data in the row we want to include it in the split data.
+            #if the yearString is the samne as the line then we want to exclude it.
+            logger.debug("line: {line}\nyearString: {yearstring}".format(line = line, yearstring = yearString))
+            if len(line) >= len(yearString) and line.isspace() is False:
+                #splitData contains id of raw data line [0], file id [1] , question id [2], begin year range ,end year range, wasAidGiven, and each lines text with beginning whitespace removed
+                splitData.append((rawDataRow[0],rawDataRow[1], rawDataRow[2],beginYear, endYear, wasAidGiven, line.lstrip()))
+    return splitData
+            
 
 
 def SplitQuestionDidConflictRecur ():
     pass
 
 
+'''
 def TEST (splitanswer):    
     for line in splitanswer:
         year1 = year2 = None
@@ -815,14 +889,14 @@ def TEST (splitanswer):
             i1 , i2 = FindYearRangeInsideString(line)
             if i1 is not None and i2 is not None:
                 year1, year2 = SplitYearRange(line[i1:i2])
-        print(year1, year2)
+        print(year1, year2)'''
         
         
 #print(GetRawDataForQuestion("WerethereanychangesingovernmentduringtheconflictWerethechangesconstitutionalorunconstitutionalProvidedatesanddetailsabouttypeofgovernmentbeforeandafterchangeincludingleftrightorientationofpartyandhowwhenthegovernmentchanged"))
-print(SplitQuestionDidGovernmentRecieveAid())
+#print(SplitRebelGroupsFightingByYear())
 #print(FindYearInsideString("1235232342015asd"))
 #print(SplitQuestionChangesToGovernment())
 #print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
-#InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
-#InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())
+InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
+InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())

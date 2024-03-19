@@ -34,15 +34,18 @@ def DataInsertedCorrectlyTest(tableName, idChange, dataLength):
         return False
 
 
+def InsertRebelGroupsFightingByYear (data):
+    pass
+
 def InsertChangesToGovernment (data):
-    tableToInsertInto = 'govt_changes_by_year'
+    tableToInsertInto = 'split_govt_changes_by_year'
     connection, cursor = tools.DatabaseConnection()
     #get largest rowid in table
     previousMaxId = GetMaxIdOfTable(tableToInsertInto, connection,cursor)
     if previousMaxId == -1: #this only happens if the table does not exist.
         logger.error("Unable to insert into {tablename}. TABLE DOES NOT EXIST").format(tablename=tableToInsertInto)
         return None
-    sql = '''INSERT INTO {tablename} (raw_data_id, file_id, question_id, answer_year, year_data)
+    sql = '''INSERT INTO {tablename} (raw_data_id, file_id, question_id, answer_year, line_data)
               VALUES (%s,%s,%s,%s,%s)'''.format(tablename = tableToInsertInto)
     
     cursor.executemany(sql, data)
@@ -62,8 +65,14 @@ def InsertChangesToGovernment (data):
     connection.close()
     return None
 
+def InsertCeasefireDeclared (data):
+    pass
+
+def InsertOfferInducements (data):
+    pass
+
 def InsertNegotiationsSuggested (data):
-    tableToInsertInto = 'negotiations_suggested'
+    tableToInsertInto = 'split_negotiations_suggested'
     connection, cursor = tools.DatabaseConnection()
     #get largest row in table
     previousMaxId = GetMaxIdOfTable(tableToInsertInto, connection,cursor)
@@ -71,7 +80,7 @@ def InsertNegotiationsSuggested (data):
     if previousMaxId == -1: #this only happens if the table does not exist.
         logger.error("Unable to insert into {tablename}. TABLE DOES NOT EXIST").format(tablename = tableToInsertInto)
         return None
-    sql = '''INSERT INTO {tablename} (raw_data_id, file_id, question_id, answer_year, answer_month, year_data)
+    sql = '''INSERT INTO {tablename} (raw_data_id, file_id, question_id, answer_year, answer_month, line_data)
               VALUES (%s,%s,%s,%s,%s,%s)'''.format(tablename = tableToInsertInto)
     
     cursor.executemany(sql, data)
@@ -86,3 +95,48 @@ def InsertNegotiationsSuggested (data):
     cursor.close()
     connection.close()
     return None
+
+def InsertOneOrBothRefuseNegotiate (data):
+    pass
+
+def InsertContentOfNegotiations (data):
+    pass
+
+def InsertEndWithoutSigning (data):
+    pass
+
+def InsertWasAgreementSigned (data):
+    pass
+
+def InsertAgreementEndFighting (data):
+    pass
+
+def InsertReachedNotSigned (data):
+    pass
+
+def InsertUnsignedEndFighting (data):
+    pass
+
+def InsertOutsideOfferMediation  (data):
+    pass
+
+def InsertDidMediationOccur (data):
+    pass
+
+def InsertWasUNInvolved (data):
+    pass
+
+def InsertWereIGOInvolved (data):
+    pass
+
+def InsertThirdPartyIntervene (data):
+    pass
+
+def InsertDidGovernmentRecieveAid (data):
+    pass
+
+def InsertDidRebelsRecieveAid (data):
+    pass
+
+def InsertDidConflictRecur (data):
+    pass
