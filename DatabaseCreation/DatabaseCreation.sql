@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS heather.raw_data (id int NOT NULL AUTO_INCREMENT, fil
 
 CREATE TABLE IF NOT EXISTS heather.questions (id int NOT NULL AUTO_INCREMENT, question_text text NOT NULL, question_hash varchar(256) NOT NULL, question_display_text text NOT NULL, PRIMARY KEY(id), UNIQUE(question_hash));
 
-CREATE TABLE IF NOT EXISTS heather.split_rebel_groups_by_year (id int NOT NULL AUTO_INCREMENT, raw_data_id int NOT NULL, file_id int NOT NULL, question_id int NOT NULL, answer_year varchar(8), line_data text, PRIMARY KEY (id), FOREIGN KEY (question_id) REFERENCES  heather.questions(id) );
+CREATE TABLE IF NOT EXISTS heather.split_rebel_groups_by_year (id int NOT NULL AUTO_INCREMENT, raw_data_id int NOT NULL, file_id int NOT NULL, question_id int NOT NULL, answer_year varchar(8), rebel_aims text,  line_data text, PRIMARY KEY (id), FOREIGN KEY (question_id) REFERENCES  heather.questions(id) );
 
 CREATE TABLE IF NOT EXISTS heather.split_govt_changes_by_year (id int NOT NULL AUTO_INCREMENT, raw_data_id int NOT NULL, file_id int NOT NULL, question_id int NOT NULL, answer_year varchar(8), line_data text, PRIMARY KEY (id), FOREIGN KEY (question_id) REFERENCES  heather.questions(id) ); 
 
