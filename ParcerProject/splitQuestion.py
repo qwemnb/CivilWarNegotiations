@@ -1,10 +1,6 @@
 import re
 import tools
-import InsertSplitQuestion
 from tools import logger
-from QuestionDictionary import questionDictionary
-
-
 
 def CheckQuestionExists ():
     pass
@@ -217,7 +213,7 @@ def SplitQuestionOfferInducements():
     splitData =  []
     #splitData will contain id of raw data line, file id, question id, year, month and each lines text
     year = ""
-    month = ''
+    month = 12
     #cycle through the lines in the rawDAta and label each row with the correct year and month.
     #each set of data starts with a line that is between 1941 and 2016
     for rawDataRow in rawData:
@@ -723,7 +719,7 @@ def SplitQuestionThirdPartyIntervene ():
     return splitData
 
 
-def SplitQuestionDidGovernmentRecieveAid ():
+def SplitQuestionDidGovernmentReceiveAid ():
     rawData = GetRawDataForQuestion("Didthegovernmentreceivenonconflictspecificforeigndevelopmentaid")
     splitData = []
     
@@ -755,14 +751,14 @@ def SplitQuestionDidGovernmentRecieveAid ():
                 
                 #this removes all special characters including spaces
                 alphaNumLine = ''.join(i for i in splitLine if i.isalnum())
-                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
+                logger.debug("alphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
                 
                 wasAidGiven = "Yes"
                 yearString = splitLine
             #If it does not start with Yes
             else:
                 alphaNumLine = ''.join(i for i in line.lower().lstrip() if i.isalnum())
-                logger.debug("AlphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
+                logger.debug("alphaNumLine: {alphaline}".format(alphaline = alphaNumLine))
                 yearString = line.lower().lstrip().split(" ", 1)[0]
             
             
@@ -798,7 +794,7 @@ def SplitQuestionDidGovernmentRecieveAid ():
             
 
 
-def SplitQuestionDidRebelsRecieveAid ():
+def SplitQuestionDidRebelsReceiveAid ():
     rawData = GetRawDataForQuestion("Didtherebelgroupreceivenonconflictspecificforeigndevelopmentaid")
     splitData = []
     
@@ -898,5 +894,5 @@ def TEST (splitanswer):
 #print(SplitQuestionChangesToGovernment())
 #print(SplitQuestionNegotiationsSuggested())
 #print(LineStarsWithAYear(3))
-InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
-InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())
+#InsertSplitQuestion.InsertNegotiationsSuggested(SplitQuestionNegotiationsSuggested())
+#InsertSplitQuestion.InsertChangesToGovernment(SplitQuestionChangesToGovernment())
